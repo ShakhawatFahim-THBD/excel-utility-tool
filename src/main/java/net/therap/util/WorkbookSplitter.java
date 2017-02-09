@@ -101,7 +101,7 @@ public class WorkbookSplitter {
             }
         }
 
-        if (workbook.getSheetAt(0).getPhysicalNumberOfRows() > 0) {
+        if (workbook.getSheetAt(0).getPhysicalNumberOfRows() > 1) {
             workbooks.add(workbook);
         }
 
