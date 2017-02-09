@@ -199,13 +199,13 @@ public class WorkbookSplitter {
         int totalRowWritten = 0;
         int extensionIndex = filePath.lastIndexOf(".");
 
-        String fileNameWitoutPrefix = filePath.substring(0, extensionIndex);
+        String fileNameWithoutExtension = filePath.substring(0, extensionIndex);
         String extension = filePath.substring(extensionIndex);
 
         FileOutputStream out = null;
         try {
             for (int i = 0; i < workbooks.size(); i++) {
-                String newFileName = fileNameWitoutPrefix + ("_" + (i + 1)) + extension;
+                String newFileName = fileNameWithoutExtension + ("_" + (i + 1)) + extension;
 
                 out = new FileOutputStream(new File(newFileName));
                 workbooks.get(i).write(out);
