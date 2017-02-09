@@ -31,7 +31,6 @@ public class WorkbookSplitter {
     public void splitWorkbook() {
         List<Workbook> workbooks = getWorkbooks();
 
-        System.out.println("========== Completed Processing Input Excel From: " + filePath + " ==================");
         System.out.println("========== Total File to be created : " + workbooks.size() + " ==================");
 
         writeWorkBooks(workbooks);
@@ -43,6 +42,7 @@ public class WorkbookSplitter {
         try {
             inputWorkBook = WorkbookFactory.create(new File(filePath));
         } catch (IOException | InvalidFormatException e) {
+            System.out.println("========== Failed to process Input Excel From: " + filePath + " ==================");
             e.printStackTrace();
         }
 
@@ -68,11 +68,15 @@ public class WorkbookSplitter {
 
         int headerCount = findLastNonEmptyColumnIndex(headerRow);
 
+        if (headerCount == 0) {
+            return Collections.emptyList();
+        }
+
         List<Workbook> workbooks = new ArrayList<>();
         Workbook workbook = new HSSFWorkbook();
         Sheet splittedInputSheet = workbook.createSheet();
         Row newHeaderRow = splittedInputSheet.createRow(0);
-        copyRowValues(headerRow, newHeaderRow, headerCount);
+        copyRowValues(workbook, headerRow, newHeaderRow, headerCount);
 
         int rowCount = 0;
 
@@ -81,7 +85,7 @@ public class WorkbookSplitter {
 
             if (!isEmpty(row)) {
                 Row newRow = splittedInputSheet.createRow(splittedInputSheet.getLastRowNum() + 1);
-                copyRowValues(row, newRow, headerCount);
+                copyRowValues(workbook, row, newRow, headerCount);
                 totalProcessedRowCount++;
                 rowCount++;
             }
@@ -92,7 +96,7 @@ public class WorkbookSplitter {
                 workbook = new HSSFWorkbook();
                 splittedInputSheet = workbook.createSheet();
                 newHeaderRow = splittedInputSheet.createRow(0);
-                copyRowValues(headerRow, newHeaderRow, headerCount);
+                copyRowValues(workbook, headerRow, newHeaderRow, headerCount);
                 rowCount = 0;
             }
         }
@@ -129,7 +133,7 @@ public class WorkbookSplitter {
         return lastNonEmptyIndex;
     }
 
-    private void copyRowValues(Row existingRow, Row newRow, int headerCount) {
+    private void copyRowValues(Workbook workbook, Row existingRow, Row newRow, int headerCount) {
         int index = 0;
         Iterator<Cell> cellIterator = existingRow.cellIterator();
 
@@ -137,13 +141,16 @@ public class WorkbookSplitter {
             Cell existingCell = cellIterator.next();
             CellType cellType = existingCell.getCellTypeEnum();
 
-            if (existingCell.getColumnIndex() >= headerCount) {
+            if (existingCell.getColumnIndex() > headerCount) {
                 break;
             }
 
             Cell newCell = newRow.createCell(index++);
-
             newCell.setCellType(cellType);
+
+            CellStyle newCellStyle = workbook.createCellStyle();
+            newCellStyle.cloneStyleFrom(existingCell.getCellStyle());
+            newCell.setCellStyle(newCellStyle);
 
             switch (cellType) {
                 case NUMERIC:
@@ -180,6 +187,11 @@ public class WorkbookSplitter {
     }
 
     private void writeWorkBooks(List<Workbook> workbooks) {
+        if (workbooks.isEmpty()) {
+            System.out.println("========== Nothing to write on ==========");
+            return;
+        }
+
         int totalRowWritten = 0;
         int extensionIndex = filePath.lastIndexOf(".");
 
