@@ -134,18 +134,22 @@ public class WorkbookSplitter {
     }
 
     private void copyRowValues(Workbook workbook, Row existingRow, Row newRow, int headerCount) {
-        int index = 0;
-        Iterator<Cell> cellIterator = existingRow.cellIterator();
+        int lastCellIndex = existingRow.getLastCellNum();
 
-        while (cellIterator.hasNext()) {
-            Cell existingCell = cellIterator.next();
+        for (int index = 0; index <= lastCellIndex; index++) {
+            Cell existingCell = existingRow.getCell(index);
+
+            if (existingCell == null) {
+                continue;
+            }
+
             CellType cellType = existingCell.getCellTypeEnum();
 
             if (existingCell.getColumnIndex() > headerCount) {
                 break;
             }
 
-            Cell newCell = newRow.createCell(index++);
+            Cell newCell = newRow.createCell(index);
             newCell.setCellType(cellType);
 
             CellStyle newCellStyle = workbook.createCellStyle();
